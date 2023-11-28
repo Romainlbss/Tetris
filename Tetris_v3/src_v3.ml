@@ -96,7 +96,7 @@ let spawn_shape(p_shape, p_color, p_nb, p_param: t_shape*t_color*int*t_param) =
 
 (* Main *)
 
-let tetris_v2():unit = 
+let tetris_v3():unit = 
   
   let horizontal_bar:t_shape = {position = (0, 0),(1, 0),(2, 0),(3, 0); height = 1; width = 4};
   and vertical_bar:t_shape = {position = (0, 0),(0, 1),(0, 2),(0, 3); height = 4; width = 1};

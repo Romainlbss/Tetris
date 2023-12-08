@@ -236,7 +236,7 @@ let move_at_bottom(p_cur_shape, p_param, p_game:t_cur_shape*t_param*t_game): t_c
 
 let colision(p_cur_shape, p_param, p_game:t_cur_shape*t_param*t_game): bool =
   let colision : bool ref = ref false in
-    if p_cur_shape.position.(1) = p_param.size_y - p_param.shapes.(!(p_cur_shape.shape)).height;
+    if p_cur_shape.position.(1) = p_param.size_y - p_param.shapes.(!(p_cur_shape.shape)).height || p_cur_shape.position.(0) + p_param.shapes.(!(p_cur_shape.shape)).width - 1 >= p_param.size_x || p_cur_shape.position.(0) < 0
     then colision := true
     else 
       for i = 0 to p_param.shapes.(!(p_cur_shape.shape)).width - 1
@@ -248,6 +248,32 @@ let colision(p_cur_shape, p_param, p_game:t_cur_shape*t_param*t_game): bool =
         );
      done;
   !colision
+;;
+
+let rot_rgt_shape(p_cur_shape : t_cur_shape): int =
+  match !(p_cur_shape.shape) with
+    | 0 -> 1 ;
+    | 1 -> 0 ;
+    | _ -> !(p_cur_shape.shape)
+;;
+
+let rot_rgt_base(p_cur_shape, p_param, p_game : t_cur_shape * t_param * t_game): t_cur_shape =
+  if !(p_cur_shape.shape) > 1
+  then
+    p_cur_shape
+  else
+    let x, y = p_cur_shape.position.(0), p_cur_shape.position.(1) in
+      let new_cur_shape : t_cur_shape ref = ref p_cur_shape in
+        if !(p_cur_shape.shape) = 0 
+        then new_cur_shape := {position = [| x + 1; y - 1 |]; color = p_cur_shape.color ; shape = ref (rot_rgt_shape(p_cur_shape))}
+        else new_cur_shape := {position = [| x - 1; y + 1 |]; color = p_cur_shape.color ; shape = ref (rot_rgt_shape(p_cur_shape))};
+        if not (colision(!(new_cur_shape), p_param, p_game)) && not (p_cur_shape.position.(1) = 0)
+        then 
+            (
+              print_endline("Triple monstre");
+              !(new_cur_shape);
+            )
+        else p_cur_shape
 ;;
 
 let supp_shape(p_cur_shape, p_param, p_game : t_cur_shape*t_param*t_game) : unit =
@@ -295,25 +321,32 @@ let final_intert(p_shape, p_param, p_game:t_cur_shape*t_param*t_game):unit =
 
 let move_shape(key, p_param, p_game:char*t_param*t_game):unit = 
   match key with 
-    |'d' -> 
+    |'q' -> 
       (
         supp_shape(!(p_game.main_shape), p_param, p_game);
         p_game.main_shape := move_left(!(p_game.main_shape), p_param, p_game);
         draw_shape(!(p_game.main_shape), p_param, p_game), p_param, p_game;
         affiche_matrice(p_param, p_game);
       );
-    |'h' -> 
+    |'d' -> 
       (
         supp_shape(!(p_game.main_shape), p_param, p_game);
         p_game.main_shape := move_right(!(p_game.main_shape), p_param, p_game);
         draw_shape(!(p_game.main_shape), p_param, p_game);
         affiche_matrice(p_param, p_game);
       );
-    |'v' -> 
+    |'s' -> 
       (
         supp_shape(!(p_game.main_shape), p_param, p_game);
         p_game.main_shape := move_at_bottom(!(p_game.main_shape), p_param, p_game);
         draw_shape(!(p_game.main_shape), p_param, p_game), p_param, p_game;
+        affiche_matrice(p_param, p_game);
+      );
+    |'z' ->
+      (
+        supp_shape(!(p_game.main_shape), p_param, p_game);
+        p_game.main_shape := rot_rgt_base(!(p_game.main_shape), p_param, p_game);
+        draw_shape(!(p_game.main_shape), p_param, p_game);
         affiche_matrice(p_param, p_game);
       );
     |_ -> ();
@@ -431,7 +464,7 @@ let tetris_v6():unit =
   let horizontal_bar:t_shape = {position = [|(0, 0); (1, 0); (2, 0); (3, 0)|]; height = 1; width = 4};
   and vertical_bar:t_shape = {position = [|(0, 0); (0, 1); (0, 2); (0, 3)|]; height = 4; width = 1};
   and square:t_shape = {position = [|(0, 0); (1, 0); (0, 1); (1, 1)|]; height = 2; width = 2} in
-  let init:t_param = {size_x = 10; size_y = 20; dilat = 25; tick = ref 0.2; border = 20; shapes = [|horizontal_bar; vertical_bar; square|]; colors = [|green; yellow; orange; blue; red; magenta; cyan|]} in
+  let init:t_param = {size_x = 10; size_y = 20; dilat = 25; tick = ref 0.5; border = 20; shapes = [|horizontal_bar; vertical_bar; square|]; colors = [|green; yellow; orange; blue; red; magenta; cyan|]} in
     let game:t_game = { game_space = create_game_space(init.size_y, init.size_x); score = ref 0; main_shape = ref (cur_shape_choice(init))}
     in
       open_graph(init);
